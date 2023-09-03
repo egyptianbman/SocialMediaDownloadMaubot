@@ -35,7 +35,7 @@ class SocialMediaDownloadPlugin(Plugin):
     async def on_message(self, evt: MessageEvent) -> None:
         if evt.content.msgtype != MessageType.TEXT or evt.content.body.startswith("!"):
             return
-        
+
         for url_tup in youtube_pattern.findall(evt.content.body):
             await evt.mark_read()
             if self.config["youtube.enabled"]:
@@ -77,9 +77,6 @@ class SocialMediaDownloadPlugin(Plugin):
         response_text = await response.read()
         data = json.loads(response_text.decode())
 
-        if self.config["youtube.info"]:
-            await evt.reply(data['title'])
-
         if self.config["youtube.thumbnail"]:
             thumbnail_link = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
             response = await self.http.get(thumbnail_link)
@@ -90,6 +87,12 @@ class SocialMediaDownloadPlugin(Plugin):
             filename = f"{video_id}.jpg"
             uri = await self.client.upload_media(thumbnail, mime_type='image/jpeg', filename=filename)
             await self.client.send_image(evt.room_id, url=uri, file_name=filename, info=ImageInfo(mimetype='image/jpeg'))
+
+        if self.config["youtube.info"]:
+            msg = "**[" + data['title'] + "](" + url + ")**"
+            msg += " - *" + data['author_name'] + "*"
+
+            await evt.respond(msg)
 
     async def handle_instagram(self, evt, url_tup):
         L = instaloader.Instaloader()
